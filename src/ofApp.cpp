@@ -9,8 +9,7 @@ void ofApp::setup(){
     light.setup();
     siri.setSpeaker("Samantha");
     siri.setSinger("Bad News");
-    siri.setContent("You just smiled. You looks pretty handsome ");
-    siri.setContent2("You just blink");
+    siri.setContent("You just smiled. You look pretty handsome ");
     
     // Setup gui
     gui.setup();
@@ -18,11 +17,19 @@ void ofApp::setup(){
     gui.add(blackWhite.setup("Black and White", false));
     
     
+
+    //this makes sure that the back of the model doesn't show through the front
+    
+    model.setPosition(ofGetWidth()*.5, ofGetHeight() * 0.75, 0);
+
+    
     // Setup face tracker
     tracker.setup();
     
     // Initialize the color for the overplay circles
     color = ofColor(36,13,255,50);
+    time = 0;
+    
 }
 
 //--------------------------------------------------------------
@@ -33,7 +40,7 @@ void ofApp::update(){
        if(grabber.isFrameNew()){
            tracker.update(grabber);
        }
-    timer+= 3;
+   
     for(auto face : tracker.getInstances()){
     ofxFaceTracker2Landmarks markers = face.getLandmarks();
         int distFaceWide =(int) ofDist(markers.getImagePoint(42).x, markers.getImagePoint(42).y, markers.getImagePoint(47).x, markers.getImagePoint(47).y);
@@ -52,29 +59,43 @@ void ofApp::update(){
     
         
         
-        if(distMouth >= (0.9 * distFaceWide) && count < 2){
+        if(distMouth >= (0.95 * distFaceWide) && (time % 240 == 0)){
             cout <<"You are smiling";
             cout << "       ";
             siri.speak();
             siri.sing();
-            count += 1;
+            //count += 1;
             smilePoint = ofPoint(markers.getImagePoint(67).x, markers.getImagePoint(67).y);
             smile = !smile;
             color = ofColor(232,12,147,10);
             
-        } else {
-            count = 0;
         }
+        
+        time ++;
        
     }
-    
+    for (int i = 0; i < grabber.getWidth(); i+= 16) {
+        for (int j = 0; j < grabber.getHeight(); j+= 16) {
+            ofColor color1 = grabber.getPixels().getColor(i, j) + color;
+            float bright = grabber.getPixels().getColor(i, j).getBrightness();
+            
+            if(bright < 20){
+                brightnessCount ++;
+                if(brightnessCount < (ofGetWidth()*ofGetHeight())){
+                    smile = false;
+                }
+            }
+            
+        }
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    //drawWithMesh();
+    tracker.drawDebug();
     float myTime = ofGetSystemTimeMillis();
-   // grabber.draw(0, 0);
-  // float time = ofGetTimelapsed();
+   
     //draw the grids of colored circled that overlay the image
     for (int i = 0; i < grabber.getWidth(); i+= 16) {
       for (int j = 0; j < grabber.getHeight(); j+= 16) {
@@ -86,9 +107,7 @@ void ofApp::draw(){
           } else{
               ofSetColor(color1);
           }
-          float Noisew = ofNoise(i/30.0+timer/6, timer/3);
-          float Noisex = ofNoise(i/60.0+timer/6, timer/3);
-          float Noisey = ofNoise(i/40.0+timer/6, timer/3);
+         
           float myNoise = 60.0 * ofSignedNoise(glm::vec2(i/400.0, myTime/8000.0));
         float brightness = color.getBrightness();
         float radius = ofMap(brightness, 0, 255, 0, 8);
@@ -98,13 +117,77 @@ void ofApp::draw(){
           }
         if(smile){
             ofTranslate(smilePoint.x, smilePoint.y);
-        }
-          ofDrawSphere(i*myNoise, j*myNoise, 100*myNoise, radius + dotSize);
-        ofDrawCircle(i, j, radius + dotSize);
+             ofDrawCircle(i, j, radius + dotSize);
+       } else {
+            ofDrawCircle(i, j, radius + dotSize);
+           }
       }
     }
-       tracker.drawDebug();
-        gui.draw();
+    
+    tracker.drawDebug();
+    gui.draw();
+       
 }
 
 //--------------------------------------------------------------
+
+
+
+//The code below is a test method used to apply the 3d object onto the screen
+/*void ofApp::drawWithMesh(){
+
+    //get the model attributes we need
+    for(auto face : tracker.getInstances()){
+       ofxFaceTracker2Landmarks markers = face.getLandmarks();
+        
+        glm::vec3 scale = model.getScale();
+        glm::vec3 position = model.getPosition();
+        float normalizedScale = model.getNormalizedScale();
+        ofVboMesh mesh = model.getMesh(0);
+        ofTexture texture;
+        ofxAssimpMeshHelper& meshHelper = model.getMeshHelper( 0 );
+        bool bHasTexture = meshHelper.hasTexture();
+        if( bHasTexture ) {
+            texture = model.getTextureForMesh(0);
+        }
+
+        ofMaterial material = model.getMaterialForMesh(0);
+
+        ofPushMatrix();
+
+        //translate and scale based on the positioning.
+        ofTranslate(position);
+        ofRotateDeg(-markers.getImagePoint(34).x, 0, 1, 0);
+        ofRotateDeg(90,1,0,0);
+
+
+        ofScale(normalizedScale, normalizedScale, normalizedScale);
+        ofScale(scale.x,scale.y,scale.z);
+
+        //modify mesh with some noise
+        float liquidness = 5;
+        float amplitude = -markers.getImagePoint(34).y/100.0;
+        float speedDampen = 5;
+        auto &verts = mesh.getVertices();
+
+        for(unsigned int i = 0; i < verts.size(); i++){
+            
+                    verts[i].x += ofSignedNoise(verts[i].x/liquidness, verts[i].y/liquidness,verts[i].z/liquidness, ofGetElapsedTimef()/speedDampen)*amplitude;
+                    verts[i].y += ofSignedNoise(verts[i].z/liquidness, verts[i].x/liquidness,verts[i].y/liquidness, ofGetElapsedTimef()/speedDampen)*amplitude;
+                    verts[i].z += ofSignedNoise(verts[i].y/liquidness, verts[i].z/liquidness,verts[i].x/liquidness, ofGetElapsedTimef()/speedDampen)*amplitude;
+
+            
+        }
+
+        //draw the model manually
+        if(bHasTexture) texture.bind();
+        material.begin();
+        mesh.drawWireframe(); //you can draw wireframe too
+        mesh.drawFaces();
+        material.end();
+        if(bHasTexture) texture.unbind();
+
+        ofPopMatrix();
+    }
+
+}*/
