@@ -9,8 +9,8 @@ void ofApp::setup(){
     light.setup();
     siri.setSpeaker("Samantha");
     siri.setSinger("Bad News");
-    siri.setContent("You just smiled");
-    siri.setContent2("You are blinking");
+    siri.setContent("You just smiled. You looks pretty handsome ");
+    siri.setContent2("You just blink");
     
     // Setup gui
     gui.setup();
