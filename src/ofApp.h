@@ -9,15 +9,15 @@
 //#include "ofxBox2d.h"
 class ofApp : public ofBaseApp{
 
-	public:
-		void setup();
-		void update();
-		void draw();
+    public:
+        void setup();
+        void update();
+        void draw();
         ofLight light;
         ofxFaceTracker2 tracker;
         ofVideoGrabber grabber;
         ofxSiri siri;
-    
+        ofPoint smilePoint;
         ofxPanel gui;
         ofxIntSlider dotSize;
         ofxToggle blackWhite;
@@ -25,8 +25,8 @@ class ofApp : public ofBaseApp{
     
         ofImage filter;
         ofColor color;
-    
-    
+        bool smile = false;
+        float timer = 0;
         int count = 0;
     
     

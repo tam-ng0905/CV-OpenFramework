@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofSetDataPathRoot(ofFile("model/"));
-    grabber.setup(1280,720);
+    grabber.setup(1280,768);
     light.setup();
     // Setup tracker
     light.setup();
@@ -33,53 +33,48 @@ void ofApp::update(){
        if(grabber.isFrameNew()){
            tracker.update(grabber);
        }
+    timer+= 3;
     for(auto face : tracker.getInstances()){
     ofxFaceTracker2Landmarks markers = face.getLandmarks();
-        int dist =(int) ofDist(markers.getImagePoint(63).x, markers.getImagePoint(63).y, markers.getImagePoint(67).x, markers.getImagePoint(67).y);
+        int distFaceWide =(int) ofDist(markers.getImagePoint(42).x, markers.getImagePoint(42).y, markers.getImagePoint(47).x, markers.getImagePoint(47).y);
+        //int dist =(int) ofDist(markers.getImagePoint(63).x, markers.getImagePoint(63).y, markers.getImagePoint(67).x, markers.getImagePoint(67).y);
         
-        int distSide =(int) ofDist(markers.getImagePoint(49).x, markers.getImagePoint(49).y, markers.getImagePoint(55).x, markers.getImagePoint(55).y);
+        int distMouth =(int) ofDist(markers.getImagePoint(49).x, markers.getImagePoint(49).y, markers.getImagePoint(55).x, markers.getImagePoint(55).y);
         
         //Output result to the console
-        cout <<dist ;
-        cout <<" "  ;
-        cout <<distSide;
-        cout <<" eye ";
+       // cout <<dist ;
+        //cout <<" "  ;
+     //   cout <<distSide;
+     //   cout <<" eye ";
         
         //Calculate the distance for the sides of the eyes
-        int distEye =(int) ofDist(markers.getImagePoint(38).x, markers.getImagePoint(38).y, markers.getImagePoint(42).x, markers.getImagePoint(42).y);
+        //int distEye =(int) ofDist(markers.getImagePoint(38).x, markers.getImagePoint(38).y, markers.getImagePoint(42).x, markers.getImagePoint(42).y);
     
         
         
-        if(dist > 40 && distSide > 50 && count <2){
+        if(distMouth >= (0.9 * distFaceWide) && count < 2){
             cout <<"You are smiling";
             cout << "       ";
             siri.speak();
             siri.sing();
             count += 1;
+            smilePoint = ofPoint(markers.getImagePoint(67).x, markers.getImagePoint(67).y);
+            smile = !true;
             color = ofColor(232,12,147,10);
             
-        }
-        if(distEye < 94 && count < 3){
-            cout <<"You are blinking";
-            cout << "       ";
-            color = ofColor(57,64,88,10);
-            siri.speak2();
-            count += 1;
-        }
-        
-        //reset the count to give control over the amount of
-        //the other two ifs statement above
-        if(dist <40 || distSide <40 || distEye > 90){
+        } else {
             count = 0;
         }
+       
     }
     
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    grabber.draw(0, 0);
-  
+    float myTime = ofGetSystemTimeMillis();
+   // grabber.draw(0, 0);
+  // float time = ofGetTimelapsed();
     //draw the grids of colored circled that overlay the image
     for (int i = 0; i < grabber.getWidth(); i+= 16) {
       for (int j = 0; j < grabber.getHeight(); j+= 16) {
@@ -91,13 +86,19 @@ void ofApp::draw(){
           } else{
               ofSetColor(color1);
           }
+          float Noisew = ofNoise(i/30.0+timer/6, timer/3);
+          float Noisex = ofNoise(i/60.0+timer/6, timer/3);
+          float Noisey = ofNoise(i/40.0+timer/6, timer/3);
+          float myNoise = 60.0 * ofSignedNoise(glm::vec2(i/400.0, myTime/8000.0));
         float brightness = color.getBrightness();
         float radius = ofMap(brightness, 0, 255, 0, 8);
           float light = grabber.getPixels().getColor(i, j).getLightness();
           if(light > 200){
-              ofDrawSphere(i, j, 10, radius + dotSize);
+              ofDrawSphere(i+myNoise, j+myNoise, 100+myNoise, radius + dotSize);
           }
-          
+        if(smile){
+            ofTranslate(smilePoint.x, smilePoint.y);
+        }
         ofDrawCircle(i, j, radius + dotSize);
       }
     }
