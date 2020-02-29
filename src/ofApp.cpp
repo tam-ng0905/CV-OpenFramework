@@ -40,7 +40,7 @@ void ofApp::update(){
        if(grabber.isFrameNew()){
            tracker.update(grabber);
        }
-   
+   //gets landmarks from all the faces
     for(auto face : tracker.getInstances()){
     ofxFaceTracker2Landmarks markers = face.getLandmarks();
         int distFaceWide =(int) ofDist(markers.getImagePoint(42).x, markers.getImagePoint(42).y, markers.getImagePoint(47).x, markers.getImagePoint(47).y);
@@ -48,11 +48,7 @@ void ofApp::update(){
         
         int distMouth =(int) ofDist(markers.getImagePoint(49).x, markers.getImagePoint(49).y, markers.getImagePoint(55).x, markers.getImagePoint(55).y);
         
-        //Output result to the console
-       // cout <<dist ;
-        //cout <<" "  ;
-     //   cout <<distSide;
-     //   cout <<" eye ";
+        
         
         //Calculate the distance for the sides of the eyes
         //int distEye =(int) ofDist(markers.getImagePoint(38).x, markers.getImagePoint(38).y, markers.getImagePoint(42).x, markers.getImagePoint(42).y);
@@ -74,6 +70,8 @@ void ofApp::update(){
         time ++;
        
     }
+    
+    //Detect if the screen is all black so that can reset it
     for (int i = 0; i < grabber.getWidth(); i+= 16) {
         for (int j = 0; j < grabber.getHeight(); j+= 16) {
             ofColor color1 = grabber.getPixels().getColor(i, j) + color;
