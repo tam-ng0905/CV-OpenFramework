@@ -59,7 +59,7 @@ void ofApp::update(){
             siri.sing();
             count += 1;
             smilePoint = ofPoint(markers.getImagePoint(67).x, markers.getImagePoint(67).y);
-            smile = !true;
+            smile = !smile;
             color = ofColor(232,12,147,10);
             
         } else {
@@ -94,11 +94,12 @@ void ofApp::draw(){
         float radius = ofMap(brightness, 0, 255, 0, 8);
           float light = grabber.getPixels().getColor(i, j).getLightness();
           if(light > 200){
-              ofDrawSphere(i+myNoise, j+myNoise, 100+myNoise, radius + dotSize);
+              ofDrawSphere(i*myNoise, j*myNoise, 100*myNoise, radius + dotSize);
           }
         if(smile){
             ofTranslate(smilePoint.x, smilePoint.y);
         }
+          ofDrawSphere(i*myNoise, j*myNoise, 100*myNoise, radius + dotSize);
         ofDrawCircle(i, j, radius + dotSize);
       }
     }
